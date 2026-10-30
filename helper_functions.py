@@ -23,13 +23,14 @@ def jukes_cantor(reference_sequence: str, distant_sequence: str) -> float:
     """
     compared_positions = 0
     mismatches = 0
+    bases = ["A", "C", "G", "T"]
 
     # go through both sequences together, one position at a time
     for i in range(0, len(reference_sequence)):
-        base_ref = reference_sequence[i]
-        base_seq = distant_sequence[i]
+        base_ref = reference_sequence[i].upper()
+        base_seq = distant_sequence[i].upper()
 
-        if base_ref == '-' or base_seq == '-':
+        if base_ref not in bases or base_seq not in bases:
             continue
 
         compared_positions = compared_positions + 1
@@ -38,6 +39,7 @@ def jukes_cantor(reference_sequence: str, distant_sequence: str) -> float:
 
     # raw proportion of differences
     proportion_diff = mismatches / compared_positions
+
     # Jukes-Cantor correction
     distance_per_nuc = -3/4 * math.log(1 - 4/3 * proportion_diff)
     # convert to per genome
@@ -66,4 +68,27 @@ def kimura_two_parameter(reference_sequence: str, distant_sequence: str) -> floa
         For example 1.196.
 
     """
-    raise NotImplementedError()
+    compared_positions = 0
+    transitions = 0
+    transversions = 0
+
+    for i in range(len(reference_sequence)):
+        base_ref = reference_sequence[i]
+        base_seq = distant_sequence[i]
+
+        if base_ref not in "ACGT" or base_seq not in "ACGT":
+            continue
+
+        compared_positions += 1
+        if base_ref != base_seq:
+            pair = {base_ref, base_seq}
+            if pair == {"A", "G"} or pair == {"C", "T"}:
+                transitions += 1
+            else:
+                transversions += 1
+
+    P = transitions / compared_positions
+    Q = transversions / compared_positions
+
+    distance_per_nucleotide = -1/2 * math.log(1 - 2 * P - Q) - 1/4 * math.log(1 - 2 * Q)
+    return distance_per_nucleotide * compared_positions
